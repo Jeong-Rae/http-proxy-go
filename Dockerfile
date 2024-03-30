@@ -1,8 +1,9 @@
-FROM golang:1.17 AS builder
+FROM golang:1.22.1 AS builder
 
 WORKDIR /app
 
-COPY . .
+COPY go.mod ./
+COPY proxy.go ./
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 

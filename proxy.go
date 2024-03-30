@@ -14,7 +14,7 @@ import (
 var fileLogger *log.Logger
 
 func setupLogger() {
-	logsPath := "./logs"
+	logsPath := "/logs"
 	fileName := "info.log"
 	fullPath := logsPath + "/" + fileName
 

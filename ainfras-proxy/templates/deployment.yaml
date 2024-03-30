@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ainfras-proxy.fullname" . }}
+  labels:
+    app: ainfras-proxy
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: ainfras-proxy
+  template:
+    metadata:
+      labels:
+        app: ainfras-proxy
+    spec:
+      containers:
+      - name: ainfras-proxy
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - containerPort: 8080
+        env:
+        - name: LOGGING_TARGET_HOST
+          value: {{ .Values.env.loggingTargetHost | quote }}
+        volumeMounts:
+        - name: log-volume
+          mountPath: /app/logs
+      volumes:
+      - name: log-volume
+        emptyDir: {}

@@ -1,0 +1,47 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: ainfras-proxy-deploy
+    labels:
+        app: ainfras-proxy
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: ainfras-proxy
+    template:
+        metadata:
+            labels:
+                app: ainfras-proxy
+        spec:
+            containers:
+                - name: ainfras-proxy
+                  image: jeongrae/ainfras-proxy:latest
+                  ports:
+                      - containerPort: 8080
+                  env:
+                      - name: LOGGING_TARGET_HOST
+                        value: "spring-app-svc.default.svc.cluster.local:5050"
+                  volumeMounts:
+                      - name: log-volume
+                        mountPath: /app/logs
+            volumes:
+                - name: log-volume
+                  emptyDir: {}
+---
+#Service
+apiVersion: v1
+kind: Service
+metadata:
+    name: ainfras-proxy-svc
+    labels:
+        app: ainfras-proxy
+spec:
+    selector:
+        app: ainfras-proxy
+    ports:
+        - protocol: TCP
+          port: 8080
+          targetPort: 8080
+    type: ClusterIP

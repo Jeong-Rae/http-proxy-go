@@ -1,0 +1,11 @@
+replicaCount: 1
+image:
+    repository: jeongrae/ainfras-proxy
+    tag: latest
+    pullPolicy: IfNotPresent
+service:
+    type: ClusterIP
+    port: 8080
+    name: ainfras-proxy-svc
+env:
+    loggingTargetHost: "spring-app-svc.default.svc.cluster.local:5050"

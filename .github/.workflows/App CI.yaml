@@ -3,10 +3,11 @@ name: App CI
 on:
     push:
         branches: [master]
+    workflow_dispatch:
 
 jobs:
-    build-and-push:
-        runs-on: ubuntu-latest
+    build:
+        runs-on: ubuntu-20.04
 
         steps:
             - name: Checkout code
@@ -26,4 +27,4 @@ jobs:
               with:
                   context: .
                   push: true
-                  tags: your-dockerhub-username/l7-proxy:latest
+                  tags: ${{ secrets.DOCKERHUB_USERNAME }}/ainfras-proxy:latest

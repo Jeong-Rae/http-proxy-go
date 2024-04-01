@@ -35,7 +35,7 @@ func setupLogger() {
 }
 
 func logRequest(r *http.Request, bodyBytes []byte) {
-    requestLine := fmt.Sprintf("%s %s %s\n", r.Method, r.URL.Path, r.Proto)
+    requestLine := fmt.Sprintf("%s %s %s\n", r.Method, r.URL.RequestURI(), r.Proto)
 
     // 헤더를 순회하며 출력 형식을 조정
     var headerStr string

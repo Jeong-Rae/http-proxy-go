@@ -2,6 +2,7 @@ FROM golang:1.22.1 AS builder
 
 WORKDIR /app
 
+COPY go.sum ./
 COPY go.mod ./
 COPY proxy.go ./
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -9,12 +10,17 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var fileLogger *log.Logger
 
 func setupLogger() {
-	logsPath := "/logs"
+	logsPath := "./logs"
 	fileName := "info.log"
 	fullPath := logsPath + "/" + fileName
 
@@ -56,6 +62,7 @@ func logRequest(r *http.Request, bodyBytes []byte) {
     go func(logData string) {
         fmt.Print(logData) // 표준 출력에 로그 출력
         fileLogger.Print(logData) // 파일에 로그 출력
+		insertLogToMongo(logData) // db 에 로그 기록
     }(completeLog)
 }
 
@@ -80,10 +87,49 @@ func handleProxy(w http.ResponseWriter, r *http.Request) {
 	proxy.ServeHTTP(w, r)
 }
 
-
-
 func main() {
 	setupLogger()
 	http.HandleFunc("/", handleProxy)
 	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+// 몽고 db에 저장
+func insertLogToMongo(logData string) {
+    go func() {
+        ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+        defer cancel()
+
+        client, err := mongo.Connect(ctx, options.Client().ApplyURI(getMongoURL()))
+        if err != nil {
+            fmt.Printf("Failed to connect to MongoDB: %v\n", err)
+            return
+        }
+        defer func() {
+            if err := client.Disconnect(ctx); err != nil {
+                fmt.Printf("Failed to disconnect from MongoDB: %v\n", err)
+            }
+        }()
+
+        collection := client.Database("ainfras").Collection("2024/04/01")
+
+        doc := bson.M{
+            "payload":    logData,
+            "created_at": time.Now(),
+            "status":     "normal",
+        }
+
+        _, err = collection.InsertOne(ctx, doc)
+        if err != nil {
+            fmt.Printf("Failed to insert log into MongoDB: %v\n", err)
+        }
+    }()
+
+}
+
+func getMongoURL() string {
+    mongodbHost := os.Getenv("MONGODB_HOST")
+    if mongodbHost == "" {
+        mongodbHost = "mongodb-svc.default.svc.cluster.local:27017"
+    }
+    return "mongodb://" + mongodbHost
 }
